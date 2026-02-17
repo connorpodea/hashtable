@@ -1,3 +1,4 @@
+// hash.cpp
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -34,20 +35,31 @@ public:
     {
         this->k_count = 10;
         ptr_arr = new Node *[k_count];
+
+        for (int i = 0; i < this->get_k_count(); i++)
+        {
+            ptr_arr[i] = nullptr;
+        }
     }
 
     HashTable(int k_count)
     {
         this->k_count = k_count;
         ptr_arr = new Node *[k_count];
+
+        for (int i = 0; i < k_count; i++)
+        {
+            ptr_arr[i] = nullptr;
+        }
     }
 
-    void load(Node *new_node)
+    void load(string data)
     {
-        int index = hash_function(new_node->data) % k_count;
-        Node *head = ptr_arr[index];
-        new_node->next = head;
-        head = new_node;
+        int index = hash_function(data) % k_count;
+
+        Node *new_node = new Node(data);
+        new_node->next = ptr_arr[index];
+        ptr_arr[index] = new_node;
     }
 
     int get_k_count()
@@ -79,6 +91,7 @@ public:
         }
         sum /= this->get_k_count();
         std_dev = sqrt(sum);
+        return std_dev;
     }
 
     int get_list_size(int index)
@@ -96,8 +109,10 @@ public:
 
     void print_first_five_lists()
     {
+        cout << "==== Printing the contents of the first 5 slots ====\n";
         for (int i = 0; i < 5; i++)
         {
+            cout << "Slot " << i << ": ";
             print_list(i);
             cout << "\n";
         }
@@ -106,23 +121,27 @@ public:
     void print_list(int index)
     {
         Node *trav = ptr_arr[index];
-
-        cout << "Contents of index " << index << ": ";
-        while (trav->next != nullptr)
+        while (trav != nullptr)
         {
-            cout << trav->data << ", ";
+            cout << trav->data << " ";
             trav = trav->next;
         }
-        cout << trav->data;
     }
 
-    void print_list_lengths()
+    void print_slot_lengths()
     {
+        cout << "==== Printing the slot lengths ====\n";
         for (int i = 0; i < this->get_k_count(); i++)
         {
-            cout << "Index " << i << " has " << get_list_size(i) << " elements.";
-            cout << "\n";
+            cout << "Slot " << i << ": ";
+            cout << get_list_size(i) << "\n";
         }
+    }
+
+    void print_std_dev()
+    {
+        cout << "==== Printing the standard deviation ====\n";
+        cout << get_std_dev();
     }
 };
 
