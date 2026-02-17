@@ -1,4 +1,3 @@
-// hash.cpp
 #include <iostream>
 #include <string>
 #include <cmath>

@@ -1,0 +1,10 @@
+# Executables
+encoder
+hash
+
+# IDE and System files
+.vscode/
+.DS_Store
+
+# Precompiled headers
+*.gch
