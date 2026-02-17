@@ -6,153 +6,135 @@
 
 using namespace std;
 
-struct Node
+Node::Node()
 {
-    string data;
-    Node *next;
+    data = "";
+    next = nullptr;
+}
 
-    Node()
-    {
-        data = "";
-        next = nullptr;
-    }
-
-    Node(string input)
-    {
-        this->data = input;
-        this->next = nullptr;
-    }
-};
-
-class HashTable
+Node::Node(string input)
 {
-private:
-    int k_count;
-    Node **ptr_arr;
+    this->data = input;
+    this->next = nullptr;
+}
 
-public:
-    HashTable()
+HashTable::HashTable()
+{
+    this->k_count = 10;
+    ptr_arr = new Node *[k_count];
+
+    for (int i = 0; i < this->get_k_count(); i++)
     {
-        this->k_count = 10;
-        ptr_arr = new Node *[k_count];
-
-        for (int i = 0; i < this->get_k_count(); i++)
-        {
-            ptr_arr[i] = nullptr;
-        }
+        ptr_arr[i] = nullptr;
     }
+}
 
-    HashTable(int k_count)
+HashTable::HashTable(int k_count)
+{
+    this->k_count = k_count;
+    ptr_arr = new Node *[k_count];
+
+    for (int i = 0; i < k_count; i++)
     {
-        this->k_count = k_count;
-        ptr_arr = new Node *[k_count];
-
-        for (int i = 0; i < k_count; i++)
-        {
-            ptr_arr[i] = nullptr;
-        }
+        ptr_arr[i] = nullptr;
     }
+}
 
-    void load(string data)
+int HashTable::get_k_count()
+{
+    return this->k_count;
+}
+
+void HashTable::load(string data)
+{
+    int index = hash_function(data) % k_count;
+
+    Node *new_node = new Node(data);
+    new_node->next = ptr_arr[index];
+    ptr_arr[index] = new_node;
+}
+
+double HashTable::get_mean()
+{
+    double sum = 0;
+    for (int i = 0; i < this->get_k_count(); i++)
     {
-        int index = hash_function(data) % k_count;
-
-        Node *new_node = new Node(data);
-        new_node->next = ptr_arr[index];
-        ptr_arr[index] = new_node;
+        sum += get_list_size(i);
     }
+    return sum / this->get_k_count();
+}
 
-    int get_k_count()
+double HashTable::get_std_dev()
+{
+    double std_dev = 0;
+    double sum = 0;
+    double mean = get_mean();
+
+    for (int i = 0; i < this->get_k_count(); i++)
     {
-        return this->k_count;
+        int x_i = get_list_size(i);
+        sum += (x_i - mean) * (x_i - mean);
     }
+    sum /= this->get_k_count();
+    std_dev = sqrt(sum);
+    return std_dev;
+}
 
-    double get_mean()
+int HashTable::get_list_size(int index)
+{
+    Node *trav = ptr_arr[index];
+    int size = 0;
+    while (trav != nullptr)
     {
-        double sum = 0;
-
-        for (int i = 0; i < this->get_k_count(); i++)
-        {
-            sum += get_list_size(i);
-        }
-        return sum / this->get_k_count();
+        size++;
+        trav = trav->next;
     }
+    return size;
+}
 
-    double get_std_dev()
+void HashTable::print_list(int index)
+{
+    Node *trav = ptr_arr[index];
+    while (trav != nullptr)
     {
-        double std_dev = 0;
-        double sum = 0;
-        double mean = get_mean();
-
-        for (int i = 0; i < this->get_k_count(); i++)
-        {
-            int x_i = get_list_size(i);
-            sum += (x_i - mean) * (x_i - mean);
-        }
-        sum /= this->get_k_count();
-        std_dev = sqrt(sum);
-        return std_dev;
+        cout << trav->data << " ";
+        trav = trav->next;
     }
+}
 
-    int get_list_size(int index)
+void HashTable::print_first_five_lists()
+{
+    cout << "==== Printing the contents of the first 5 slots ====\n";
+    for (int i = 0; i < 5; i++)
     {
-        Node *trav = ptr_arr[index];
-        int size = 0;
-
-        while (trav != nullptr)
-        {
-            size++;
-            trav = trav->next;
-        }
-        return size;
+        cout << "Slot " << i << ": ";
+        print_list(i);
+        cout << "\n";
     }
+}
 
-    void print_first_five_lists()
+void HashTable::print_slot_lengths()
+{
+    cout << "==== Printing the slot lengths ====\n";
+    for (int i = 0; i < this->get_k_count(); i++)
     {
-        cout << "==== Printing the contents of the first 5 slots ====\n";
-        for (int i = 0; i < 5; i++)
-        {
-            cout << "Slot " << i << ": ";
-            print_list(i);
-            cout << "\n";
-        }
+        cout << "Slot " << i << ": ";
+        cout << get_list_size(i) << "\n";
     }
+}
 
-    void print_list(int index)
-    {
-        Node *trav = ptr_arr[index];
-        while (trav != nullptr)
-        {
-            cout << trav->data << " ";
-            trav = trav->next;
-        }
-    }
-
-    void print_slot_lengths()
-    {
-        cout << "==== Printing the slot lengths ====\n";
-        for (int i = 0; i < this->get_k_count(); i++)
-        {
-            cout << "Slot " << i << ": ";
-            cout << get_list_size(i) << "\n";
-        }
-    }
-
-    void print_std_dev()
-    {
-        cout << "==== Printing the standard deviation ====\n";
-        cout << get_std_dev();
-    }
-};
+void HashTable::print_std_dev()
+{
+    cout << "==== Printing the standard deviation ====\n";
+    cout << get_std_dev() << endl;
+}
 
 int hash_function(string text)
 {
     int sum = 0;
-
     for (int i = 0; i < text.length(); i++)
     {
         sum += text.at(i);
     }
-
     return sum;
 }

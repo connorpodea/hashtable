@@ -48,14 +48,15 @@ int main()
         ht->load(texts[i]);
     }
 
-    cout << "==== Printing the contents of the first 5 slots ====" << endl;
+    cout << "\n";
     ht->print_first_five_lists();
+    cout << "\n";
 
-    cout << "==== Printing the slot lengths ====" << endl;
     ht->print_slot_lengths();
+    cout << "\n";
 
-    cout << "==== Printing the standard deviation =====" << endl;
     ht->print_std_dev();
+    cout << "\n";
 
     return 0;
 }

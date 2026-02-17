@@ -10,7 +10,8 @@ struct Node
 {
     string data;
     Node *next;
-    Node(string input) : data(input), next(nullptr) {}
+    Node();
+    Node(string input);
 };
 
 class HashTable
@@ -20,10 +21,14 @@ private:
     Node **ptr_arr;
 
 public:
+    HashTable();
     HashTable(int k);
+    int get_k_count();
     void load(string data);
+    double get_mean();
     double get_std_dev();
     int get_list_size(int index);
+    void print_list(int index);
     void print_first_five_lists();
     void print_slot_lengths();
     void print_std_dev();
