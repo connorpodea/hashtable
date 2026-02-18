@@ -7,13 +7,13 @@ using namespace std;
 
 Node::Node()
 {
-    data = "";
+    key = "";
     next = nullptr;
 }
 
-Node::Node(string input)
+Node::Node(string key)
 {
-    this->data = input;
+    this->key = key;
     this->next = nullptr;
 }
 
@@ -44,11 +44,11 @@ int HashTable::get_k_count()
     return this->k_count;
 }
 
-void HashTable::load(string data)
+void HashTable::load(string key)
 {
-    int index = hash_function(data) % k_count;
+    int index = hash_function(key) % k_count;
 
-    Node *new_node = new Node(data);
+    Node *new_node = new Node(key);
     new_node->next = ptr_arr[index];
     ptr_arr[index] = new_node;
 }
@@ -96,7 +96,7 @@ void HashTable::print_list(int index)
     Node *trav = ptr_arr[index];
     while (trav != nullptr)
     {
-        cout << trav->data << " ";
+        cout << trav->key << " ";
         trav = trav->next;
     }
 }
@@ -128,12 +128,12 @@ void HashTable::print_std_dev()
     cout << get_std_dev() << endl;
 }
 
-int hash_function(string text)
+int hash_function(string key)
 {
     int sum = 0;
-    for (int i = 0; i < text.length(); i++)
+    for (int i = 0; i < key.length(); i++)
     {
-        sum += text.at(i);
+        sum += key.at(i) * i;
     }
     return sum;
 }

@@ -7,10 +7,10 @@ using namespace std;
 
 struct Node
 {
-    string data;
+    string key;
     Node *next;
     Node();
-    Node(string input);
+    Node(string key);
 };
 
 class HashTable
@@ -23,7 +23,7 @@ public:
     HashTable();
     HashTable(int k);
     int get_k_count();
-    void load(string data);
+    void load(string key);
     double get_mean();
     double get_std_dev();
     int get_list_size(int index);
@@ -33,4 +33,4 @@ public:
     void print_std_dev();
 };
 
-int hash_function(string text);
+int hash_function(string key);

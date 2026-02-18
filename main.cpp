@@ -47,15 +47,15 @@ int main()
         ht->load(texts[i]);
     }
 
-    cout << "\n";
+    // cout << "\n";
     ht->print_first_five_lists();
-    cout << "\n";
+    // cout << "\n";
 
     ht->print_slot_lengths();
-    cout << "\n";
+    // cout << "\n";
 
     ht->print_std_dev();
-    cout << "\n";
+    // cout << "\n";
 
     return 0;
 }
