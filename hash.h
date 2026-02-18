@@ -18,15 +18,14 @@ class HashTable
 private:
     int k_count;
     Node **ptr_arr;
+    int *slot_sizes;
 
 public:
     HashTable();
     HashTable(int k);
     int get_k_count();
     void load(string key);
-    double get_mean();
     double get_std_dev();
-    int get_list_size(int index);
     void print_list(int index);
     void print_first_five_lists();
     void print_slot_lengths();
