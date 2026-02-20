@@ -119,7 +119,8 @@ void HashTable::print_std_dev()
     cout << get_std_dev() << endl;
 }
 
-// reference for this hash function: https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub180-1.pdf
+// SHA-1 (Secure Hash Algorithm 1) implementation
+// reference: https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub180-1.pdf
 
 // 512 bit string creation:
 // left shift the string by 1, and add 1
@@ -210,9 +211,8 @@ int HashTable::hash_function(string key)
     H_3 = H_3 + D;
     H_4 = H_4 + E;
 
-    // unsure how to return the final hash since i would need to compute (160bit_int % k_count)
-    // temp return val:
-    return 0;
+    // unsure how to return the final hash since i would need to compute (160_bit_int % k_count)
+    return 0; // temp return val
 }
 
 uint32 get_S(uint32 n, uint32 X)
