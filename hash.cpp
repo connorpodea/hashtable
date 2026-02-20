@@ -123,9 +123,9 @@ void HashTable::print_std_dev()
 // reference: https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub180-1.pdf
 
 // 512 bit block creation:
-// append a 1 to the key
-// append 0's until the key length is 512 bits
-// add the original length of the key
+// append a 1 to the message
+// append 0's until the message length is 512 bits
+// add the original bit count of the key to the message
 
 // functions used:
 // f_t(B,C,D) = (B & C) | (~B & D)                 for (0 <= t <= 19)
@@ -153,8 +153,7 @@ void HashTable::print_std_dev()
 // and n is an integer with 0 <= n < 32, is defined by
 // S^(n)(X) = (X << n) | (X >> 32-n)
 
-// algorithm
-//
+// algorithm:
 // let A = H_0, B = H_1, C = H_2, D = H_3, E = H_4
 // for (t >= 0) {
 //      if (t >= 16), let W_t = S^1(W_(t-3) XOR W(t-8) XOR W(t-14) XOR W(t-16))
@@ -168,8 +167,8 @@ void HashTable::print_std_dev()
 
 int HashTable::hash_function(string key)
 {
-    // word_block = uint32[16]
-    uint32 *word_block = make_block(key);
+    uint32 W[80];
+    make_block(key, W);
 
     // initial constants
     uint32 K_t = 0x0;
@@ -186,21 +185,16 @@ int HashTable::hash_function(string key)
     uint32 D = H_3;
     uint32 E = H_4;
 
-    uint32 TEMP;
     uint32 W_t;
+
+    for (int t = 16; t < 80; t++)
+    {
+        W[t] = get_S(1, W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]);
+    }
 
     for (int t = 0; t < 80; t++)
     {
-        if (t >= 16)
-        {
-            W_t = get_S(1, word_block[(t - 3) % 16] ^ word_block[(t - 8) % 16] ^ word_block[(t - 14) % 16] ^ word_block[(t - 16) % 16]);
-        }
-        else
-        {
-            W_t = word_block[t];
-        }
-
-        TEMP = get_S(5, A) + get_f(B, C, D, t) + E + W_t + get_K(t);
+        uint32 TEMP = get_S(5, A) + get_f(B, C, D, t) + E + W[t] + get_K(t);
         E = D;
         D = C;
         C = get_S(30, B);
@@ -213,13 +207,13 @@ int HashTable::hash_function(string key)
     H_3 = H_3 + D;
     H_4 = H_4 + E;
 
-    // unsure how to return the final hash since i would need to compute (160_bit_int % k_count)
-    return 0; // temp return val
+    // can return any H_i
+    return (H_4 % this->get_k_count());
 }
 
 uint32 get_S(uint32 n, uint32 X)
 {
-    return (X << n) | (X >> 32 - n);
+    return (X << n) | (X >> (32 - n));
 }
 
 uint32 get_K(int t)
@@ -272,62 +266,31 @@ uint32 get_f(uint32 B, uint32 C, uint32 D, int t)
     }
 }
 
-uint32 *make_block(string key)
+void make_block(string key, uint32 *word_block)
 {
-    uint32 *word_block = new uint32[16]();
+    for (int i = 0; i < 16; i++)
+    {
+        word_block[i] = 0;
+    }
 
     int total_bytes = key.length();
-    int complete_words = total_bytes / 4;
-    int bytes_in_last_word = total_bytes % 4;
 
-    for (int i = 0; i < complete_words; i++)
+    for (int i = 0; i < total_bytes; i++)
     {
-        word_block[i] = make_word(key, i);
+        // (i >> 2) calculates the word index to update
+        // (i % 4) finds the byte position
+        // shift the byte left to pack it into the 32 bit word
+        word_block[i >> 2] |= (uint32)((unsigned char)key[i]) << (8 * (3 - (i % 4)));
     }
 
-    uint32 last_word = 0;
-    for (int i = 0; i < 4; i++)
-    {
-        last_word <<= 8;
-        int index = (complete_words * 4) + i;
-        if (index < total_bytes)
-        {
-            last_word |= (unsigned char)key.at(index);
-        }
-        else if (index == total_bytes)
-        {
-            last_word |= 0x80;
-        }
-        else
-        {
-            last_word |= 0x00;
-        }
-    }
-    word_block[complete_words] = last_word;
+    // append the '1' bit (0x80 = 10000000) after the message
+    // (i % 4) finds the byte position
+    // shift the byte left to pack it into the 32 bit word
+    word_block[total_bytes >> 2] |= (uint32)0x80 << (8 * (3 - (total_bytes % 4)));
 
-    // still have to add the bit length to the end of the block
-
-    return word_block;
-}
-
-uint32 make_word(string key, int word_index)
-{
-    uint32 word = 0;
-    int base_index = word_index * 4;
-
-    // converts the next 4-bytes to a word
-    for (int i = 0; i < 4; i++)
-    {
-        if (base_index + i < key.length())
-        {
-            word <<= 8;
-            word |= (unsigned char)(key.at(base_index + i));
-        }
-        else
-        {
-            word <<= 8;
-            word |= 0x00;
-        }
-    }
-    return word;
+    // add the bit length to the end of the message
+    uint64 two_word_bit_length = uint64(total_bytes * 8);
+    // split the bit length into two 32-bit words, high and low
+    word_block[14] = (uint32)(two_word_bit_length >> 32);
+    word_block[15] = (uint32)(two_word_bit_length & 0xFFFFFFFF);
 }
