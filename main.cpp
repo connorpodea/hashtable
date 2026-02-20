@@ -47,16 +47,12 @@ int main()
         ht->load(texts[i]);
     }
 
-    // cout << "\n";
     ht->print_first_five_lists();
-    // cout << "\n";
 
     ht->print_slot_lengths();
-    // cout << "\n";
 
     std::cout << std::fixed << std::setprecision(4);
     ht->print_std_dev();
-    // cout << "\n";
 
     return 0;
 }
