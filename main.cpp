@@ -54,6 +54,7 @@ int main()
     ht->print_slot_lengths();
     // cout << "\n";
 
+    std::cout << std::fixed << std::setprecision(4);
     ht->print_std_dev();
     // cout << "\n";
 
