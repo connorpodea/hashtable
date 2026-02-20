@@ -50,7 +50,7 @@ int HashTable::get_k_count()
 
 void HashTable::load(string key)
 {
-    int index = hash_function(key) % k_count;
+    int index = hash_function(key);
 
     Node *new_node = new Node(key);
     new_node->next = ptr_arr[index];
@@ -122,9 +122,10 @@ void HashTable::print_std_dev()
 // SHA-1 (Secure Hash Algorithm 1) implementation
 // reference: https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub180-1.pdf
 
-// 512 bit string creation:
-// left shift the string by 1, and add 1
-// left shift (512-lengthOfString) times, and add (lengthOfString)
+// 512 bit block creation:
+// append a 1 to the key
+// append 0's until the key length is 512 bits
+// add the original length of the key
 
 // functions used:
 // f_t(B,C,D) = (B & C) | (~B & D)                 for (0 <= t <= 19)
@@ -145,29 +146,30 @@ void HashTable::print_std_dev()
 // H_3 = (10325476)_16
 // H_4 = (C3D2E1F0)_16
 
-// word block (512 bit block using modified intial value)
+// word block (512-bit block using modified intial value)
 // divide into 16 words: W_0, W_1, W_2, ..., W_15
 
-// The circular left shift operation S^(n)(X), where X is a word and n is an integer
-// with 0 <= n < 32, is defined by
+// the circular left shift operation S^(n)(X), where X is a 32-bit word
+// and n is an integer with 0 <= n < 32, is defined by
 // S^(n)(X) = (X << n) | (X >> 32-n)
 
 // algorithm
-// for (t >= 16), let W_t = S^1(W_(t-3) XOR W(t-8) XOR W(t-14) XOR W(t-16))
+//
 // let A = H_0, B = H_1, C = H_2, D = H_3, E = H_4
 // for (t >= 0) {
-//      TEMP = S^5(A) + f_t(B,C,D) + E + W_t + K_t}
+//      if (t >= 16), let W_t = S^1(W_(t-3) XOR W(t-8) XOR W(t-14) XOR W(t-16))
+//      TEMP = S^5(A) + f_t(B,C,D) + E + W_t + K_t
 //      E = D; D = C, C = S^(30)(B); B = A; A = TEMP;
 // }
 // Let H_0 = H_0 + A, H_1 = H_1 + B, H_2 = H_2 + C, H_3 = H_3 + D, H_4 = H_4 + E
 //
 // after processing M_n, the hash is the 160 bit string represented by the 5 words
-// H_0 H_1 H_2 H_3 H_4
+// {H_0, H_1, H_2, H_3, H_4}
 
 int HashTable::hash_function(string key)
 {
-    uint32 *word_blocks = new uint32[16];
-    int beginning_word_index = 0;
+    // word_block = uint32[16]
+    uint32 *word_block = make_block(key);
 
     // initial constants
     uint32 K_t = 0x0;
@@ -191,11 +193,11 @@ int HashTable::hash_function(string key)
     {
         if (t >= 16)
         {
-            W_t = get_S(1, word_blocks[(t - 3) % 16] ^ word_blocks[(t - 8) % 16] ^ word_blocks[(t - 14) % 16] ^ word_blocks[(t - 16) % 16]);
+            W_t = get_S(1, word_block[(t - 3) % 16] ^ word_block[(t - 8) % 16] ^ word_block[(t - 14) % 16] ^ word_block[(t - 16) % 16]);
         }
         else
         {
-            W_t = word_blocks[t];
+            W_t = word_block[t];
         }
 
         TEMP = get_S(5, A) + get_f(B, C, D, t) + E + W_t + get_K(t);
@@ -268,4 +270,64 @@ uint32 get_f(uint32 B, uint32 C, uint32 D, int t)
         // should never be reached
         return 0x0;
     }
+}
+
+uint32 *make_block(string key)
+{
+    uint32 *word_block = new uint32[16]();
+
+    int total_bytes = key.length();
+    int complete_words = total_bytes / 4;
+    int bytes_in_last_word = total_bytes % 4;
+
+    for (int i = 0; i < complete_words; i++)
+    {
+        word_block[i] = make_word(key, i);
+    }
+
+    uint32 last_word = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        last_word <<= 8;
+        int index = (complete_words * 4) + i;
+        if (index < total_bytes)
+        {
+            last_word |= (unsigned char)key.at(index);
+        }
+        else if (index == total_bytes)
+        {
+            last_word |= 0x80;
+        }
+        else
+        {
+            last_word |= 0x00;
+        }
+    }
+    word_block[complete_words] = last_word;
+
+    // still have to add the bit length to the end of the block
+
+    return word_block;
+}
+
+uint32 make_word(string key, int word_index)
+{
+    uint32 word = 0;
+    int base_index = word_index * 4;
+
+    // converts the next 4-bytes to a word
+    for (int i = 0; i < 4; i++)
+    {
+        if (base_index + i < key.length())
+        {
+            word <<= 8;
+            word |= (unsigned char)(key.at(base_index + i));
+        }
+        else
+        {
+            word <<= 8;
+            word |= 0x00;
+        }
+    }
+    return word;
 }
